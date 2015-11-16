@@ -22,12 +22,13 @@ IDirect3DDevice9* Device = NULL;
 // window size
 const int Width  = 1024;
 const int Height = 768;
-const int NUM_OF_ROD_BALL = 6;
+const int NUM_OF_ROD_BALL = 5;
 const float SCALE_OF_ROD_MOVE = 0.08f;
 // There are four balls
 // initialize the position (coordinate) of each ball (ball0 ~ ball3)
 const float spherePos[4][2] = { {-2.7f,0} , {+2.4f,0} , {3.3f,0} , {-2.7f,-0.9f}}; 
-const float rodPos[6][2] = { {-4.0f,-1.8}, {-4.0f, -1.4}, {-4.0f, -1.0 } , {-4.0f, 1.8}, {-4.0f, 1.4}, {-4.0f, 1.0} };
+const float leftRodPos[5][2] = { {-4.0f, -2.2f},  {-4.0f,-1.8f}, {-4.0f, -1.4f}, {-4.0f, -1.0f }, {-4.0f, -0.6f } };
+const float rightRodPos[5][2] = { {-4.0f, 2.2f}, { -4.0f, 1.8f }, { -4.0f, 1.4f }, { -4.0f, 1.0f } , {-4.0f, 0.6f} };
 // initialize the color of each ball (ball0 ~ ball3)
 const D3DXCOLOR sphereColor[4] = {d3d::RED, d3d::RED, d3d::YELLOW, d3d::WHITE};
 
@@ -448,7 +449,8 @@ private:
 CWall	g_legoPlane;
 CWall	g_legowall[4];
 CSphere	g_sphere[4];
-CSphere g_rod[6];
+CSphere g_leftRod[NUM_OF_ROD_BALL];
+CSphere g_rightRod[NUM_OF_ROD_BALL];
 CSphere	g_target_blueball;
 CLight	g_light;
 
@@ -494,11 +496,16 @@ bool Setup()
 	}
 
 	for (i = 0; i < NUM_OF_ROD_BALL; i++) {
-		if (g_rod[i].create(Device, sphereColor[0]) == false){
+		if (g_leftRod[i].create(Device, sphereColor[0]) == false){
 			return false;
 		}
-		g_rod[i].setCenter(rodPos[i][0], (float)M_RADIUS, rodPos[i][1]);
-		g_rod[i].setPower(0, 0);
+		if (g_rightRod[i].create(Device, sphereColor[0]) == false) {
+			return false;
+		}
+		g_leftRod[i].setCenter(leftRodPos[i][0], (float)M_RADIUS, leftRodPos[i][1]);
+		g_rightRod[i].setCenter(rightRodPos[i][0], (float)M_RADIUS, rightRodPos[i][1]);
+		g_leftRod[i].setPower(0, 0);
+		g_rightRod[i].setPower(0, 0);
 	}
 	
 	// create blue ball for set direction
@@ -571,8 +578,9 @@ bool Display(float timeDelta)
 			for(j = 0; j < 4; j++){ g_legowall[i].hitBy(g_sphere[j]); }
 		}
 
-		for (i = 0; i < 2; i++) {
-			g_rod[i].ballUpdate(timeDelta);
+		for (i = 0; i < NUM_OF_ROD_BALL; i++) {
+			g_leftRod[i].ballUpdate(timeDelta);
+			g_rightRod[i].ballUpdate(timeDelta);
 		}
 
 		// check whether any two balls hit together and update the direction of balls
@@ -590,7 +598,8 @@ bool Display(float timeDelta)
 			g_sphere[i].draw(Device, g_mWorld);
 		}
 		for (i = 0; i < NUM_OF_ROD_BALL; i++) {
-			g_rod[i].draw(Device, g_mWorld);
+			g_leftRod[i].draw(Device, g_mWorld);
+			g_rightRod[i].draw(Device, g_mWorld);
 		}
 		g_target_blueball.draw(Device, g_mWorld);
         g_light.draw(Device);
@@ -621,20 +630,18 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			switch (wParam) {
 				case VK_LEFT: {
 					//막대 왼쪽이 움직인다.
-					D3DXVECTOR3 rodCenter1 = g_rod[0].getCenter();
-					D3DXVECTOR3 rodCenter2 = g_rod[1].getCenter();
-					D3DXVECTOR3 rodCenter3 = g_rod[2].getCenter();
-					g_rod[1].setCenter(rodCenter2.x - SCALE_OF_ROD_MOVE, rodCenter2.y, rodCenter2.z + SCALE_OF_ROD_MOVE);
-					g_rod[2].setCenter(rodCenter3.x - SCALE_OF_ROD_MOVE*2, rodCenter3.y, rodCenter3.z + SCALE_OF_ROD_MOVE*2);
-
+					for (int i = 1; i < 5; i++) {
+						D3DXVECTOR3 rodLeftCenter = g_leftRod[i].getCenter();
+						g_leftRod[i].setCenter(rodLeftCenter.x - SCALE_OF_ROD_MOVE * i, rodLeftCenter.y, rodLeftCenter.z + SCALE_OF_ROD_MOVE * i);
+					}
 				}
 				break;
 				case VK_RIGHT: {
 					//막대 오른쪽이 움직인다.
-					D3DXVECTOR3 rodCenter4 = g_rod[4].getCenter();
-					D3DXVECTOR3 rodCenter5 = g_rod[5].getCenter();
-					g_rod[4].setCenter(rodCenter4.x - SCALE_OF_ROD_MOVE, rodCenter4.y, rodCenter4.z - SCALE_OF_ROD_MOVE);
-					g_rod[5].setCenter(rodCenter5.x - SCALE_OF_ROD_MOVE*2, rodCenter5.y, rodCenter5.z - SCALE_OF_ROD_MOVE*2);
+					for (int i = 1; i < 5; i++) {
+						D3DXVECTOR3 rodRightCenter = g_rightRod[i].getCenter();
+						g_rightRod[i].setCenter(rodRightCenter.x - SCALE_OF_ROD_MOVE * i, rodRightCenter.y, rodRightCenter.z - SCALE_OF_ROD_MOVE* i);
+					}
 				}
 				break;
 			}
@@ -655,22 +662,23 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 					break;
 				case VK_LEFT: {
 						//막대 왼쪽이 움직인다.
-						D3DXVECTOR3 rodCenter1 = g_rod[0].getCenter();
-						D3DXVECTOR3 rodCenter2 = g_rod[1].getCenter();
-						D3DXVECTOR3 rodCenter3 = g_rod[2].getCenter();
-						g_rod[1].setCenter(rodCenter2.x + SCALE_OF_ROD_MOVE, rodCenter2.y, rodCenter2.z - SCALE_OF_ROD_MOVE);
-						g_rod[2].setCenter(rodCenter3.x + SCALE_OF_ROD_MOVE*2, rodCenter3.y , rodCenter3.z - SCALE_OF_ROD_MOVE*2);
-						
+					for (int i = 1; i < 5; i++) {
+						D3DXVECTOR3 rodLeftCenter = g_leftRod[i].getCenter();
+						if (rodLeftCenter.x == -4.0f) {
+								g_leftRod[i].setCenter(rodLeftCenter.x + SCALE_OF_ROD_MOVE * i, rodLeftCenter.y, rodLeftCenter.z - SCALE_OF_ROD_MOVE * i);
+							}
+						}					
 					}
 					break;
 				case VK_RIGHT: {
-						//막대 오른쪽이 움직인다.
-						D3DXVECTOR3 rodCenter4 = g_rod[4].getCenter();
-						D3DXVECTOR3 rodCenter5 = g_rod[5].getCenter();
-						g_rod[4].setCenter(rodCenter4.x + SCALE_OF_ROD_MOVE, rodCenter4.y, rodCenter4.z + SCALE_OF_ROD_MOVE);
-						g_rod[5].setCenter(rodCenter5.x + SCALE_OF_ROD_MOVE*2, rodCenter5.y, rodCenter5.z + SCALE_OF_ROD_MOVE*2);
+					for (int i = 1; i < 5; i++) {
+						D3DXVECTOR3 rodRightCenter = g_rightRod[i].getCenter();
+						if (rodRightCenter.x == -4.0f) {
+								g_rightRod[i].setCenter(rodRightCenter.x + SCALE_OF_ROD_MOVE * i, rodRightCenter.y, rodRightCenter.z + SCALE_OF_ROD_MOVE* i);
+							}
+						}
+						break;
 					}
-					break;
 				case VK_SPACE:
 					D3DXVECTOR3 targetPos = g_target_blueball.getCenter();
 					D3DXVECTOR3	whitePos = g_sphere[3].getCenter();
