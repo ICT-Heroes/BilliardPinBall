@@ -49,8 +49,8 @@
     <OutDir>.\Debug\</OutDir>
     <IntDir>.\Debug\</IntDir>
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Users\Velmont\Downloads\proj3_VirtualBilliard\proj3_VirtualBilliard\DirectX\Include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\Velmont\Downloads\proj3_VirtualBilliard\proj3_VirtualBilliard\DirectX\Lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\Velmont\Documents\GitHub\BilliardPinBall\DirectX\Include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\Velmont\Documents\GitHub\BilliardPinBall\DirectX\Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
