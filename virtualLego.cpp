@@ -40,7 +40,7 @@ D3DXMATRIX g_mProj;
 #define M_HEIGHT 0.01
 #define DECREASE_RATE 0.9982
 
-
+class CWall;
 // -----------------------------------------------------------------------------
 // CSphere class definition
 // -----------------------------------------------------------------------------
@@ -250,6 +250,7 @@ public:
 	float getRotation() {
 		return rotation;
 	}
+
 	bool create(IDirect3DDevice9* pDevice, float ix, float iz, float iwidth, float iheight, float idepth, D3DXCOLOR color = d3d::WHITE)
 	{
 		if (NULL == pDevice)
@@ -318,6 +319,26 @@ public:
 		return false;
 	}
 
+	bool RodhasIntersected(CSphere& ball)
+	{
+		float rodRotation = this->getRotation();
+		if (rodRotation < 0) rodRotation *= (-1);
+
+		D3DXVECTOR3 ballCenter = ball.getCenter();
+
+		// rod z = ax + b
+		float a, b;
+		b = abs(m_x) / tan(rodRotation) - abs(m_z);
+		a = (b - m_z) / (0 - m_x);
+		double distance = (a*ballCenter.x - ballCenter.z + b) / sqrt(a*a + 1);
+		if (distance <= 4*ball.getRadius()*ball.getRadius())
+		{
+			return true;
+		}
+		return false;
+	}
+
+
 	void hitBy(CSphere& ball) {
 		if (hasIntersected(ball)) {
 			D3DXVECTOR3 b = ball.getCenter();
@@ -342,6 +363,34 @@ public:
 				}
 			}
 			ball.setPower(velocityX, velocityZ);
+		}
+	}
+
+	void RodhitBy(CSphere& ball)
+	{
+		if (RodhasIntersected(ball))
+		{
+			float rodRotation = this->getRotation();
+			if (rodRotation < 0) rodRotation *= (-1);
+
+			D3DXVECTOR3 rodLocate(m_x, 0.12f, m_z);
+
+			// rod z = ax + b
+			float a, b;
+			b = abs(m_x) / tan(rodRotation) - abs(m_z);
+			a = (b - m_z) / (0 - m_x);
+
+			// 원과 rod의 충돌점
+			float collidX, collidZ;
+			// sphere 진행방향 z = ax + b
+			float sphereA, sphereB;
+			sphereA = ball.getVelocity_Z() / ball.getVelocity_X();
+			sphereB = ball.getVelocity_Z();
+
+			collidX = (b - sphereB) / (sphereA - a);
+			collidZ = collidX * a + b;
+
+			ball.setPower(-collidX - collidZ*a, collidX / a + collidZ);
 		}
 	}
 
@@ -610,6 +659,7 @@ bool Display(float timeDelta)
 
 		for (i = 0; i < 2; i++) {
 			g_rod[i].draw(Device, g_mWorld);
+			g_rod[i].RodhitBy(g_sphere[3]);
 		}
 		g_target_blueball.draw(Device, g_mWorld);
 		g_light.draw(Device);
