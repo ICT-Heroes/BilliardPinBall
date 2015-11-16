@@ -13,7 +13,7 @@
   <PropertyGroup Label="Globals">
     <SccProjectName />
     <SccLocalPath />
-    <ProjectGuid>{0565E6D2-AA2E-4A0F-8827-927EF4B080B9}</ProjectGuid>
+    <ProjectGuid>{27C2FA02-EED4-4306-AE3E-692EA143AD32}</ProjectGuid>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -49,8 +49,8 @@
     <OutDir>.\Debug\</OutDir>
     <IntDir>.\Debug\</IntDir>
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Users\Velmont\Documents\GitHub\BilliardPinBall\DirectX\Include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\Velmont\Documents\GitHub\BilliardPinBall\DirectX\Lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\Administrator\Desktop\백업은모야매롱다\학교\4-2객체지향프로그래밍\proj3_VirtualBilliard\proj3_VirtualBilliard\DirectX\Include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\Administrator\Desktop\백업은모야매롱다\학교\4-2객체지향프로그래밍\proj3_VirtualBilliard\proj3_VirtualBilliard\DirectX\Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

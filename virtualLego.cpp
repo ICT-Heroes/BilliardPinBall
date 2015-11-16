@@ -138,12 +138,12 @@ public:
 			float v1x = this->m_velocity_x + transVAx - transVBx;
 			float v1z = this->m_velocity_z + transVAz - transVBz;
 
-			float v2x = ball.getVelocity_X() - transVAx + transVBx;
-			float v2z = ball.getVelocity_Z() - transVAz + transVBz;
+			//float v2x = ball.getVelocity_X() - transVAx + transVBx;
+			//float v2z = ball.getVelocity_Z() - transVAz + transVBz;
 
 			setCenter(this->center_x + 0.01 * collisionX, this->center_y, this->center_z + 0.01 * collisionZ);
-			setPower(v1x, v1z);
-			ball.setPower(v2x, v2z);
+			setPower(3*v1x, 3*v1z);
+			//ball.setPower(v2x, v2z);
 		}
 	}
 
@@ -592,11 +592,12 @@ bool Display(float timeDelta)
 		}
 
 		// check whether any two balls hit together and update the direction of balls
-		for (i = 0; i < 4; i++) {
-			for (j = 0; j < 4; j++) {
+		for (i = 0; i < 3; i++) { // 4; i++) {
+			/*for (j = 0; j < 4; j++) {
 				if (i >= j) { continue; }
 				g_sphere[i].hitBy(g_sphere[j]);
-			}
+			}*/
+			g_sphere[3].hitBy(g_sphere[i]);
 		}
 
 		// draw plane, walls, and spheres
