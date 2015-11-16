@@ -515,6 +515,8 @@ bool Setup()
 		g_sphere[i].setCenter(spherePos[i][0], (float)M_RADIUS, spherePos[i][1]);
 		g_sphere[i].setPower(0, 0);
 	}
+	// 시작 시 중력 적용
+	g_sphere[3].setPower(-3.0, 0);
 
 	// create blue ball for set direction
 	if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
@@ -536,8 +538,8 @@ bool Setup()
 		return false;
 
 	// Position and aim the camera.
-	D3DXVECTOR3 pos(0.0f, 10.0f, 0.0f);
-	D3DXVECTOR3 target(0.0f, 0.0f, 0.0f);
+	D3DXVECTOR3 pos(-5.0f, 7.5f, 0.0f);
+	D3DXVECTOR3 target(0.0f, -2.5f, 0.0f);
 	D3DXVECTOR3 up(1.0f, 0.0f, 0.0f);
 	D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
 	Device->SetTransform(D3DTS_VIEW, &g_mView);
@@ -590,13 +592,12 @@ bool Display(float timeDelta)
 				}				
 			}
 		}
+		// 하얀 공에 중력 적용
+		g_sphere[3].setPower(g_sphere[3].getVelocity_X() + timeDelta * (-9.8), g_sphere[3].getVelocity_Z());
 
 		// check whether any two balls hit together and update the direction of balls
-		for (i = 0; i < 3; i++) { // 4; i++) {
-			/*for (j = 0; j < 4; j++) {
-				if (i >= j) { continue; }
-				g_sphere[i].hitBy(g_sphere[j]);
-			}*/
+		// 하얀 공이 충돌하는 지 확인
+		for (i = 0; i < 3; i++) { 
 			g_sphere[3].hitBy(g_sphere[i]);
 		}
 
@@ -703,7 +704,8 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		float dx;
 		float dy;
 
-		if (LOWORD(wParam) & MK_LBUTTON) {
+		// 핀볼 보드 고정
+		/*if (LOWORD(wParam) & MK_LBUTTON) {
 
 			if (isReset) {
 				isReset = false;
@@ -731,7 +733,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			old_y = new_y;
 
 		}
-		else {
+		else*/ {
 			isReset = true;
 
 			if (LOWORD(wParam) & MK_RBUTTON) {
