@@ -665,9 +665,6 @@ bool Display(float timeDelta)
 		for (i = 0; i < NUM_OF_SPHERE; i++) {
 			g_sphere[i].ballUpdate(timeDelta);
 			g_legowall[i].hitBy(g_sphere[3]);
-			if (i < 2) {
-				//g_rod[i].hitRodBy(g_sphere[3]);
-			}				
 		}
 		// 하얀 공에 중력 적용
 		g_sphere[3].setPower(g_sphere[3].getVelocity_X() + timeDelta * (-9.8), g_sphere[3].getVelocity_Z());
@@ -678,6 +675,7 @@ bool Display(float timeDelta)
 			if (i == 3) continue;
 			g_sphere[3].hitBy(g_sphere[i]);
 		}
+
 
 		// draw plane, walls, and spheres
 		g_legoPlane.draw(Device, g_mWorld);
