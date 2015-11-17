@@ -24,8 +24,6 @@ IDirect3DDevice9* Device = NULL;
 // window size
 const int Width = 1024;
 const int Height = 768;
-int score = 0;
-int interSectedCount = 0;
 const int NUM_OF_SPHERE = 8;
 // There are four balls
 // initialize the position (coordinate) of each ball (ball0 ~ ball3)
@@ -36,14 +34,43 @@ const D3DXCOLOR sphereColor[NUM_OF_SPHERE] = { d3d::MAGENTA,  d3d::YELLOW, d3d::
 // -----------------------------------------------------------------------------
 // Transform matrices
 // -----------------------------------------------------------------------------
+class ScoreSystem {
+private:
+	int score;
+	int highScore;
+public:
+	int getScore() {
+		return score;
+	}
+	int getHighScore() {
+		return highScore;
+	}
+	void setHighScore(int highScore) {
+		this->highScore = highScore;
+	}
+	void addScore() {
+		score += 10;
+	}
+	ScoreSystem() {
+		highScore = 0;
+		score = 0;
+	}
+	void initialize() {
+		score = 0;
+	}
+};
+
 D3DXMATRIX g_mWorld;
 D3DXMATRIX g_mView;
 D3DXMATRIX g_mProj;
+ScoreSystem scoreSystem;
 
 #define M_RADIUS 0.21   // ball radius
 #define PI 3.14159265
 #define M_HEIGHT 0.01
 #define DECREASE_RATE 0.9982
+
+
 
 class CWall;
 // -----------------------------------------------------------------------------
@@ -126,7 +153,7 @@ m_pSphereMesh->DrawSubset(0);
 	void hitBy(CSphere& ball)
 	{
 		if (hasIntersected(ball)) {
-			score += 10;
+			scoreSystem.addScore();
 			D3DXVECTOR3 ballCenter = ball.getCenter();
 
 			float collisionX = normalizeX(this->center_x - ballCenter.x, this->center_z - ballCenter.z);
@@ -354,7 +381,6 @@ public:
 		a = (b - m_z) / (0 - m_x);
 		double distance = (a*ballCenter.x - ballCenter.z + b) / sqrt(a*a + 1);
 		if (distance <= 4*ball.getRadius()*ball.getRadius()){
-			interSectedCount++;
 			return true;
 		}
 		return false;
@@ -534,7 +560,7 @@ CSphere	g_sphere[NUM_OF_SPHERE];
 //CSphere	g_target_blueball;
 CLight	g_light;
 LPD3DXFONT g_font;
-LPD3DXFONT g_debug;
+LPD3DXFONT g_highScore;
 
 double g_camera_pos[3] = { 0.0, 5.0, -8.0 };
 
@@ -628,7 +654,7 @@ bool Setup()
 
 	g_light.setLight(Device, g_mWorld);
 	D3DXCreateFont(Device, 60, 0, FW_BOLD, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &g_font);
-	D3DXCreateFont(Device, 20, 0, FW_BOLD, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &g_debug);
+	D3DXCreateFont(Device, 40, 0, FW_BOLD, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &g_highScore);
 	return true;
 }
 
@@ -666,6 +692,13 @@ bool Display(float timeDelta)
 				//g_rod[i].hitRodBy(g_sphere[3]);
 			}				
 		}
+
+		if (g_sphere[3].getCenter().x < -4.65f) {
+			if (scoreSystem.getScore() > scoreSystem.getHighScore()){
+				scoreSystem.setHighScore(scoreSystem.getScore());
+			}
+			scoreSystem.initialize();
+		}
 		// 하얀 공에 중력 적용
 		g_sphere[3].setPower(g_sphere[3].getVelocity_X() + timeDelta * (-9.8), g_sphere[3].getVelocity_Z());
 
@@ -702,13 +735,20 @@ bool Display(float timeDelta)
 		scoreRect.top = 50;
 		scoreRect.bottom = scoreRect.top + 80;
 
+		RECT highScoreRect;
+		highScoreRect.left = 50;
+		highScoreRect.right = 780;
+		highScoreRect.top = 130;
+		highScoreRect.bottom = scoreRect.top + 80;
+
 
 		// Draw some text
 		char scoreBuffer[20];
-		char debugBuffer[20];
-		_itoa_s(score, scoreBuffer, 20, 10);
-		_itoa_s(interSectedCount, debugBuffer, 20, 10);
+		char highScoreBuffer[20];
+		_itoa_s(scoreSystem.getScore(), scoreBuffer, 20, 10);
+		_itoa_s(scoreSystem.getHighScore(), highScoreBuffer, 20, 10);
 		g_font->DrawText(NULL, scoreBuffer, -1, &scoreRect, 0, fontColor);
+		g_highScore->DrawText(NULL, highScoreBuffer, -1, &highScoreRect, 0, fontColor);
 		Device->EndScene();
 		Device->Present(0, 0, 0, 0);
 		Device->SetTexture(0, NULL);
