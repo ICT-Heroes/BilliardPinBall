@@ -127,8 +127,8 @@ public:
 			return;
 		pDevice->SetTransform(D3DTS_WORLD, &mWorld);
 		pDevice->MultiplyTransform(D3DTS_WORLD, &m_mLocal);
-pDevice->SetMaterial(&m_mtrl);
-m_pSphereMesh->DrawSubset(0);
+		pDevice->SetMaterial(&m_mtrl);
+		m_pSphereMesh->DrawSubset(0);
 	}
 
 	bool hasIntersected(CSphere& ball)
@@ -560,9 +560,9 @@ CWall   g_rod[2];
 CSphere	g_sphere[NUM_OF_SPHERE];
 //CSphere	g_target_blueball;
 CLight	g_light;
-LPD3DXFONT g_font;
+LPD3DXFONT g_score;
 LPD3DXFONT g_highScore;
-
+LPD3DXFONT g_highScoreLabel, g_scoreLabel;
 double g_camera_pos[3] = { 0.0, 5.0, -8.0 };
 
 // -----------------------------------------------------------------------------
@@ -594,8 +594,6 @@ bool Setup()
 	g_legowall[1].setPosition(0.0f, 0.12f, -3.06f);
 	if (false == g_legowall[2].create(Device, -1, -1, 0.12f, 0.3f, 6.24f, d3d::DARKRED)) return false;
 	g_legowall[2].setPosition(4.56f, 0.12f, 0.0f);
-	//if (false == g_legowall[3].create(Device, -1, -1, 0.12f, 0.3f, 6.24f, d3d::DARKRED)) return false;
-	//g_legowall[3].setPosition(-4.56f, 0.12f, 0.0f);
 
 	if (g_rod[0].create(Device, -1, -1, 0.12f, 0.3f, 3.0f, d3d::DARKRED) == false) {
 		return false;
@@ -607,6 +605,7 @@ bool Setup()
 	}
 	g_rod[1].setPosition(-3.0f, 0.12f, 1.5f);
 	g_rod[1].rotate(0.0f, 0.12f, -1.5f, 0.5f);
+
 	// create four balls and set the position
 	for (i = 0; i < NUM_OF_SPHERE; i++) {
 		if (g_sphere[i].create(Device, sphereColor[i]) == false) return false;
@@ -614,11 +613,7 @@ bool Setup()
 		g_sphere[i].setPower(0, 0);
 	}
 	// 시작 시 하얀 공에 중력 적용
-	g_sphere[3].setPower(-1.0, 0);
-
-	// create blue ball for set direction
-	//if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
-	//g_target_blueball.setCenter(.0f, (float)M_RADIUS, .0f);
+	g_sphere[3].setPower(-1.5, 0);
 
 	// light setting 
 	D3DLIGHT9 lit;
@@ -653,10 +648,12 @@ bool Setup()
 	Device->SetRenderState(D3DRS_SHADEMODE, D3DSHADE_GOURAUD);
 
 	g_light.setLight(Device, g_mWorld);
-	D3DXCreateFont(Device, 60, 0, FW_BOLD, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &g_font);
+	
+	D3DXCreateFont(Device, 60, 0, FW_BOLD, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &g_score);
 
 	D3DXCreateFont(Device, 40, 0, FW_BOLD, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &g_highScore);
-
+	D3DXCreateFont(Device, 40, 0, FW_BOLD, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &g_highScoreLabel);
+	D3DXCreateFont(Device, 60, 0, FW_BOLD, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &g_scoreLabel);
 	return true;
 }
 
@@ -706,7 +703,6 @@ bool Display(float timeDelta)
 			g_sphere[3].hitBy(g_sphere[i]);
 		}
 
-
 		// draw plane, walls, and spheres
 		g_legoPlane.draw(Device, g_mWorld);
 		for (i = 0; i < 3; i++) {
@@ -727,19 +723,32 @@ bool Display(float timeDelta)
 		D3DCOLOR fontColor = D3DCOLOR_ARGB(255, 0, 0, 255);
 
 		// Create a rectangle to indicate where on the screen it should be drawn
+		RECT scoreLabelRect;
+		RECT highScoreLabelRect;
 		RECT scoreRect;
 		RECT highScoreRect;
-		highScoreRect.left = 20;
-		highScoreRect.right = 780;
-		highScoreRect.top = 100;
-		highScoreRect.bottom = highScoreRect.top + 80;
+		RECT gameoverRect;
 
-		scoreRect.left = 20;
-		scoreRect.right = 780;
+		scoreRect.left = 200;
+		scoreRect.right = 580;
 		scoreRect.top = 20;
 		scoreRect.bottom = scoreRect.top + 80;
 
-		RECT gameoverRect;
+		scoreLabelRect.left = 20;
+		scoreLabelRect.right = 180;
+		scoreLabelRect.top = 20;
+		scoreLabelRect.bottom = scoreLabelRect.top + 80;
+
+		highScoreRect.left = 220;
+		highScoreRect.right = 580;
+		highScoreRect.top = 100;
+		highScoreRect.bottom = highScoreRect.top + 80;
+
+		highScoreLabelRect.left = 20;
+		highScoreLabelRect.right = 200;
+		highScoreLabelRect.top = 100;
+		highScoreLabelRect.bottom = highScoreLabelRect.top + 80;		
+		
 		gameoverRect.left = 375;
 		gameoverRect.right = 780;
 		gameoverRect.top = 500;
@@ -747,20 +756,24 @@ bool Display(float timeDelta)
 
 
 		// Draw some text
+		char scoreLabelBuffer[20] = "Score";
+		char highScoreLabelBuffer[20] = "HighScore";
+		char gameoverBuffer[10] = "game over";
 		char scoreBuffer[20];
 		char highScoreBuffer[20];
+		
 		_itoa_s(scoreSystem.getScore(), scoreBuffer, 20, 10);
 		_itoa_s(scoreSystem.getHighScore(), highScoreBuffer, 20, 10);
-		g_font->DrawText(NULL, scoreBuffer, -1, &scoreRect, 0, fontColor);
+		g_score->DrawText(NULL, scoreBuffer, -1, &scoreRect, 0, fontColor);
 		g_highScore->DrawText(NULL, highScoreBuffer, -1, &highScoreRect, 0, fontColor);
-		//char debugBuffer[20];
-		char gameoverBuffer[10] = "game over";
-		//_itoa_s(interSectedCount, debugBuffer, 20, 10);
-		g_font->DrawText(NULL, scoreBuffer, -1, &scoreRect, 0, fontColor);
+		g_scoreLabel->DrawText(NULL, scoreLabelBuffer, -1, &scoreLabelRect, 0, fontColor);
+		g_highScoreLabel->DrawText(NULL, highScoreLabelBuffer, -1, &highScoreLabelRect, 0, fontColor);
+		
+		g_score->DrawText(NULL, scoreBuffer, -1, &scoreRect, 0, fontColor);
 		if (g_sphere[3].getCenter().x < -4.56 - g_sphere[3].getRadius())
 		{
 			fontColor = D3DCOLOR_ARGB(255, 255, 0, 0);
-			g_font->DrawTextA(NULL, gameoverBuffer, -1, &gameoverRect, 0, fontColor);
+			g_score->DrawTextA(NULL, gameoverBuffer, -1, &gameoverRect, 0, fontColor);
 			fontColor = D3DCOLOR_ARGB(255, 0, 0, 255);
 		}
 		Device->EndScene();
@@ -852,59 +865,6 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 
-	/*case WM_MOUSEMOVE:
-	{
-		int new_x = LOWORD(lParam);
-		int new_y = HIWORD(lParam);
-		float dx;
-		float dy;
-
-		// 핀볼 보드 고정
-		/*if (LOWORD(wParam) & MK_LBUTTON) {
-
-			if (isReset) {
-				isReset = false;
-			}
-			else {
-				D3DXVECTOR3 vDist;
-				D3DXVECTOR3 vTrans;
-				D3DXMATRIX mTrans;
-				D3DXMATRIX mX;
-				D3DXMATRIX mY;
-
-				switch (move) {
-				case WORLD_MOVE:
-					dx = (old_x - new_x) * 0.01f;
-					dy = (old_y - new_y) * 0.01f;
-					D3DXMatrixRotationY(&mX, dx);
-					D3DXMatrixRotationX(&mY, dy);
-					g_mWorld = g_mWorld * mX * mY;
-
-					break;
-				}
-			}
-
-			old_x = new_x;
-			old_y = new_y;
-
-		}
-		else*/ //{
-			/*isReset = true;
-
-		if (LOWORD(wParam) & MK_RBUTTON) {
-			dx = (old_x - new_x);// * 0.01f;
-			dy = (old_y - new_y);// * 0.01f;
-
-			D3DXVECTOR3 coord3d = g_target_blueball.getCenter();
-			g_target_blueball.setCenter(coord3d.x + dx*(-0.007f), coord3d.y, coord3d.z + dy*0.007f);
-		}
-		old_x = new_x;
-		old_y = new_y;
-
-		move = WORLD_MOVE;
-		//}*/
-		//break;
-		//}
 	}
 
 	return ::DefWindowProc(hwnd, msg, wParam, lParam);
