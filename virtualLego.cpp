@@ -24,7 +24,8 @@ IDirect3DDevice9* Device = NULL;
 // window size
 const int Width = 1024;
 const int Height = 768;
-int highScore = 0;
+int score = 0;
+int interSectedCount = 0;
 // There are four balls
 // initialize the position (coordinate) of each ball (ball0 ~ ball3)
 const float spherePos[4][2] = { {-2.7f,0} , {+2.4f,0} , {3.3f,0} , {-2.7f,-0.9f} };
@@ -124,6 +125,7 @@ public:
 	void hitBy(CSphere& ball)
 	{
 		if (hasIntersected(ball)) {
+			score+=10;
 			D3DXVECTOR3 ballCenter = ball.getCenter();
 
 			float collisionX = normalizeX(this->center_x - ballCenter.x, this->center_z - ballCenter.z);
@@ -335,7 +337,7 @@ public:
 		a = (b - m_z) / (0 - m_x);
 		double distance = (a*ballCenter.x - ballCenter.z + b) / sqrt(a*a + 1);
 		if (distance <= 4*ball.getRadius()*ball.getRadius()){
-			highScore++;
+			interSectedCount++;
 			return true;
 		}
 		return false;
@@ -514,6 +516,7 @@ CSphere	g_sphere[4];
 CSphere	g_target_blueball;
 CLight	g_light;
 LPD3DXFONT g_font;
+LPD3DXFONT g_debug;
 
 double g_camera_pos[3] = { 0.0, 5.0, -8.0 };
 
@@ -605,7 +608,8 @@ bool Setup()
 	Device->SetRenderState(D3DRS_SHADEMODE, D3DSHADE_GOURAUD);
 
 	g_light.setLight(Device, g_mWorld);
-	D3DXCreateFont(Device, 20, 0, FW_BOLD, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &g_font);
+	D3DXCreateFont(Device, 25, 0, FW_BOLD, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &g_font);
+	D3DXCreateFont(Device, 20, 0, FW_BOLD, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &g_debug);
 	return true;
 }
 
@@ -669,16 +673,26 @@ bool Display(float timeDelta)
 		D3DCOLOR fontColor = D3DCOLOR_ARGB(255, 0, 0, 255);
 
 		// Create a rectangle to indicate where on the screen it should be drawn
-		RECT rct;
-		rct.left = 2;
-		rct.right = 780;
-		rct.top = 10;
-		rct.bottom = rct.top + 20;
+		RECT scoreRect;
+		scoreRect.left = 10;
+		scoreRect.right = 780;
+		scoreRect.top = 10;
+		scoreRect.bottom = scoreRect.top + 20;
+		
+		RECT debugRect;
+		debugRect.left = 10;
+		debugRect.right = 780;
+		debugRect.top = 50;
+		debugRect.bottom = debugRect.top + 20;
 
-		// Draw some text 
-		char buffer[20];
-		_itoa_s(highScore, buffer, 20, 10);
-		g_font->DrawText(NULL, buffer, -1, &rct, 0, fontColor);
+
+		// Draw some text
+		char scoreBuffer[20];
+		char debugBuffer[20];
+		_itoa_s(score, scoreBuffer, 20, 10);
+		_itoa_s(interSectedCount, debugBuffer, 20, 10);
+		g_font->DrawText(NULL, scoreBuffer, -1, &scoreRect, 0, fontColor);
+		g_debug->DrawTextA(NULL, debugBuffer, -1, &debugRect, 0, fontColor);
 		Device->EndScene();
 		Device->Present(0, 0, 0, 0);
 		Device->SetTexture(0, NULL);
