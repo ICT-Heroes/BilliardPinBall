@@ -16,12 +16,15 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cassert>
+#include <iostream>
+
 
 IDirect3DDevice9* Device = NULL;
 
 // window size
 const int Width = 1024;
 const int Height = 768;
+int highScore = 0;
 // There are four balls
 // initialize the position (coordinate) of each ball (ball0 ~ ball3)
 const float spherePos[4][2] = { {-2.7f,0} , {+2.4f,0} , {3.3f,0} , {-2.7f,-0.9f} };
@@ -319,7 +322,7 @@ public:
 		return false;
 	}
 
-	bool RodhasIntersected(CSphere& ball)
+	bool hasRodIntersected(CSphere& ball)
 	{
 		float rodRotation = this->getRotation();
 		if (rodRotation < 0) rodRotation *= (-1);
@@ -331,8 +334,8 @@ public:
 		b = abs(m_x) / tan(rodRotation) - abs(m_z);
 		a = (b - m_z) / (0 - m_x);
 		double distance = (a*ballCenter.x - ballCenter.z + b) / sqrt(a*a + 1);
-		if (distance <= 4*ball.getRadius()*ball.getRadius())
-		{
+		if (distance <= 4*ball.getRadius()*ball.getRadius()){
+			highScore++;
 			return true;
 		}
 		return false;
@@ -364,16 +367,13 @@ public:
 			}
 			ball.setPower(velocityX, velocityZ);
 		}
-	}
 
-	void RodhitBy(CSphere& ball)
-	{
-		if (RodhasIntersected(ball))
-		{
+		if (hasRodIntersected(ball)){
+			
 			float rodRotation = this->getRotation();
 			if (rodRotation < 0) rodRotation *= (-1);
 
-			D3DXVECTOR3 rodLocate(m_x, 0.12f, m_z);
+			D3DXVECTOR3 rodLocate(this->m_x, 0.12f, this->m_z);
 
 			// rod z = ax + b
 			float a, b;
@@ -513,6 +513,7 @@ CWall   g_rod[2];
 CSphere	g_sphere[4];
 CSphere	g_target_blueball;
 CLight	g_light;
+LPD3DXFONT g_font;
 
 double g_camera_pos[3] = { 0.0, 5.0, -8.0 };
 
@@ -604,6 +605,7 @@ bool Setup()
 	Device->SetRenderState(D3DRS_SHADEMODE, D3DSHADE_GOURAUD);
 
 	g_light.setLight(Device, g_mWorld);
+	D3DXCreateFont(Device, 20, 0, FW_BOLD, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &g_font);
 	return true;
 }
 
@@ -634,15 +636,13 @@ bool Display(float timeDelta)
 		// update the position of each ball. during update, check whether each ball hit by walls.
 		for (i = 0; i < 4; i++) {
 			g_sphere[i].ballUpdate(timeDelta);
-			for (j = 0; j < 4; j++) {
-				g_legowall[i].hitBy(g_sphere[j]);
-				if (i < 2) {
-					g_rod[i].hitBy(g_sphere[j]);
-				}				
-			}
+			g_legowall[i].hitBy(g_sphere[3]);
+			if (i < 2) {
+				g_rod[i].hitBy(g_sphere[3]);
+			}				
 		}
 		// 하얀 공에 중력 적용
-		g_sphere[3].setPower(g_sphere[3].getVelocity_X() + timeDelta * (-9.8), g_sphere[3].getVelocity_Z());
+		g_sphere[3].setPower(g_sphere[3].getVelocity_X() + timeDelta * (-6.8), g_sphere[3].getVelocity_Z());
 
 		// check whether any two balls hit together and update the direction of balls
 		// 하얀 공이 충돌하는 지 확인
@@ -659,15 +659,32 @@ bool Display(float timeDelta)
 
 		for (i = 0; i < 2; i++) {
 			g_rod[i].draw(Device, g_mWorld);
-			g_rod[i].RodhitBy(g_sphere[3]);
 		}
+
 		g_target_blueball.draw(Device, g_mWorld);
 		g_light.draw(Device);
 
+
+		// Create a colour for the text - in this case blue
+		D3DCOLOR fontColor = D3DCOLOR_ARGB(255, 0, 0, 255);
+
+		// Create a rectangle to indicate where on the screen it should be drawn
+		RECT rct;
+		rct.left = 2;
+		rct.right = 780;
+		rct.top = 10;
+		rct.bottom = rct.top + 20;
+
+		// Draw some text 
+		char buffer[20];
+		_itoa_s(highScore, buffer, 20, 10);
+		g_font->DrawText(NULL, buffer, -1, &rct, 0, fontColor);
 		Device->EndScene();
 		Device->Present(0, 0, 0, 0);
 		Device->SetTexture(0, NULL);
+
 	}
+
 	return true;
 }
 
@@ -833,16 +850,3 @@ int WINAPI WinMain(HINSTANCE hinstance,
 
 	return 0;
 }
-
-class ScoreSystem {
-private:
-	int score;
-public:
-	static int highScore;
-	int getScore() {
-		return score;
-	}
-	void plusScore() {
-		score++;
-	}
-};
