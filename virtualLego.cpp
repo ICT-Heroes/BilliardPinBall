@@ -587,11 +587,7 @@ bool Setup()
 		g_sphere[i].setPower(0, 0);
 	}
 	// 시작 시 하얀 공에 중력 적용
-	g_sphere[3].setPower(-1.0, 0);
-
-	// create blue ball for set direction
-	//if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
-	//g_target_blueball.setCenter(.0f, (float)M_RADIUS, .0f);
+	g_sphere[3].setPower(-1.5, 0);
 
 	// light setting 
 	D3DLIGHT9 lit;
@@ -669,7 +665,6 @@ bool Display(float timeDelta)
 			if (i == 3) continue;
 			g_sphere[3].hitBy(g_sphere[i]);
 		}
-
 
 		// draw plane, walls, and spheres
 		g_legoPlane.draw(Device, g_mWorld);
