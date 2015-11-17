@@ -31,6 +31,7 @@ const float spherePos[NUM_OF_SPHERE][2] = { {-0.7f,-0.0f} , {1.2f, 2.3f}, {1.2f,
 // initialize the color of each ball (ball0 ~ ball3)
 const D3DXCOLOR sphereColor[NUM_OF_SPHERE] = { d3d::MAGENTA,  d3d::YELLOW, d3d::YELLOW,  d3d::WHITE, d3d::YELLOW, d3d::BLUE,d3d::BLUE,d3d::BLUE };
 
+
 // -----------------------------------------------------------------------------
 // Transform matrices
 // -----------------------------------------------------------------------------
@@ -126,8 +127,8 @@ public:
 			return;
 		pDevice->SetTransform(D3DTS_WORLD, &mWorld);
 		pDevice->MultiplyTransform(D3DTS_WORLD, &m_mLocal);
-		pDevice->SetMaterial(&m_mtrl);
-		m_pSphereMesh->DrawSubset(0);
+pDevice->SetMaterial(&m_mtrl);
+m_pSphereMesh->DrawSubset(0);
 	}
 
 	bool hasIntersected(CSphere& ball)
@@ -175,6 +176,7 @@ public:
 			//float v2z = ball.getVelocity_Z() - transVAz + transVBz;
 
 			setCenter(this->center_x + 0.01 * collisionX, this->center_y, this->center_z + 0.01 * collisionZ);
+
 			setPower(1.5*v1x, 1.5*v1z);
 			//ball.setPower(v2x, v2z);
 		}
@@ -352,12 +354,6 @@ public:
 				return true;
 			}
 		}
-		else if (this->m_x > -3.1f && this->m_x < -2.9f){ 
-			if (1.5 - ball.getRadius() < pos.x) {
-				return true;
-			}
-			
-		}
 		else {
 			if (0 < this->m_z) {
 				if (3 - ball.getRadius() < pos.z) {
@@ -421,7 +417,6 @@ public:
 
 	void hitRodBy(CSphere& ball){
 		if (hasRodIntersected(ball)){
-			
 			float rodRotation = this->getRotation();
 			if (rodRotation < 0) rodRotation *= (-1);
 
@@ -560,7 +555,7 @@ private:
 // Global variables
 // -----------------------------------------------------------------------------
 CWall	g_legoPlane;
-CWall	g_legowall[4];
+CWall	g_legowall[5];
 CWall   g_rod[2];
 CSphere	g_sphere[NUM_OF_SPHERE];
 //CSphere	g_target_blueball;
@@ -659,6 +654,7 @@ bool Setup()
 
 	g_light.setLight(Device, g_mWorld);
 	D3DXCreateFont(Device, 60, 0, FW_BOLD, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &g_font);
+
 	D3DXCreateFont(Device, 40, 0, FW_BOLD, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &g_highScore);
 
 	return true;
@@ -732,16 +728,22 @@ bool Display(float timeDelta)
 
 		// Create a rectangle to indicate where on the screen it should be drawn
 		RECT scoreRect;
-		scoreRect.left = 20;
-		scoreRect.right = 780;
-		scoreRect.top = 10;
-		scoreRect.bottom = scoreRect.top + 80;
-
 		RECT highScoreRect;
 		highScoreRect.left = 20;
 		highScoreRect.right = 780;
 		highScoreRect.top = 100;
 		highScoreRect.bottom = highScoreRect.top + 80;
+
+		scoreRect.left = 20;
+		scoreRect.right = 780;
+		scoreRect.top = 20;
+		scoreRect.bottom = scoreRect.top + 80;
+
+		RECT gameoverRect;
+		gameoverRect.left = 375;
+		gameoverRect.right = 780;
+		gameoverRect.top = 500;
+		gameoverRect.bottom = gameoverRect.top + 80;
 
 
 		// Draw some text
@@ -751,6 +753,16 @@ bool Display(float timeDelta)
 		_itoa_s(scoreSystem.getHighScore(), highScoreBuffer, 20, 10);
 		g_font->DrawText(NULL, scoreBuffer, -1, &scoreRect, 0, fontColor);
 		g_highScore->DrawText(NULL, highScoreBuffer, -1, &highScoreRect, 0, fontColor);
+		//char debugBuffer[20];
+		char gameoverBuffer[10] = "game over";
+		//_itoa_s(interSectedCount, debugBuffer, 20, 10);
+		g_font->DrawText(NULL, scoreBuffer, -1, &scoreRect, 0, fontColor);
+		if (g_sphere[3].getCenter().x < -4.56 - g_sphere[3].getRadius())
+		{
+			fontColor = D3DCOLOR_ARGB(255, 255, 0, 0);
+			g_font->DrawTextA(NULL, gameoverBuffer, -1, &gameoverRect, 0, fontColor);
+			fontColor = D3DCOLOR_ARGB(255, 0, 0, 255);
+		}
 		Device->EndScene();
 		Device->Present(0, 0, 0, 0);
 		Device->SetTexture(0, NULL);
@@ -823,8 +835,10 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			break;
 		}
 
-		/*case VK_SPACE:
-			D3DXVECTOR3 targetPos = g_target_blueball.getCenter();
+		case VK_SPACE:
+			g_sphere[3].setCenter(spherePos[3][0], (float)M_RADIUS, spherePos[3][1]);
+			g_sphere[3].setPower(-1, 0);
+			/*D3DXVECTOR3 targetPos = g_target_blueball.getCenter();
 			D3DXVECTOR3	whitePos = g_sphere[3].getCenter();
 			double theta = acos(sqrt(pow(targetPos.x - whitePos.x, 2)) / sqrt(pow(targetPos.x - whitePos.x, 2) +
 				pow(targetPos.z - whitePos.z, 2)));		// 기본 1 사분면
@@ -832,8 +846,8 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			if (targetPos.z - whitePos.z >= 0 && targetPos.x - whitePos.x <= 0) { theta = PI - theta; } //2 사분면
 			if (targetPos.z - whitePos.z <= 0 && targetPos.x - whitePos.x <= 0) { theta = PI + theta; } // 3 사분면
 			double distance = sqrt(pow(targetPos.x - whitePos.x, 2) + pow(targetPos.z - whitePos.z, 2));
-			g_sphere[3].setPower(distance * cos(theta), distance * sin(theta));
-			break;*/
+			g_sphere[3].setPower(distance * cos(theta), distance * sin(theta));*/
+			break;
 		}
 		break;
 	}
