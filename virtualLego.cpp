@@ -148,7 +148,8 @@ m_pSphereMesh->DrawSubset(0);
 			//float v2z = ball.getVelocity_Z() - transVAz + transVBz;
 
 			setCenter(this->center_x + 0.01 * collisionX, this->center_y, this->center_z + 0.01 * collisionZ);
-			setPower(3 * v1x, 3 * v1z);
+
+			setPower(1.5*v1x, 1.5*v1z);
 			//ball.setPower(v2x, v2z);
 		}
 	}
