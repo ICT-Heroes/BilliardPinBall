@@ -370,7 +370,9 @@ public:
 			}
 			ball.setPower(velocityX, velocityZ);
 		}
+	}
 
+	void hitRodBy(CSphere& ball){
 		if (hasRodIntersected(ball)){
 			
 			float rodRotation = this->getRotation();
@@ -514,7 +516,7 @@ CWall	g_legoPlane;
 CWall	g_legowall[4];
 CWall   g_rod[2];
 CSphere	g_sphere[NUM_OF_SPHERE];
-CSphere	g_target_blueball;
+//CSphere	g_target_blueball;
 CLight	g_light;
 LPD3DXFONT g_font;
 LPD3DXFONT g_debug;
@@ -570,11 +572,11 @@ bool Setup()
 		g_sphere[i].setPower(0, 0);
 	}
 	// 시작 시 중력 적용
-	g_sphere[3].setPower(-5.0, 0);
+	g_sphere[3].setPower(-1.0, 0);
 
 	// create blue ball for set direction
-	if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
-	g_target_blueball.setCenter(.0f, (float)M_RADIUS, .0f);
+	//if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
+	//g_target_blueball.setCenter(.0f, (float)M_RADIUS, .0f);
 
 	// light setting 
 	D3DLIGHT9 lit;
@@ -643,15 +645,16 @@ bool Display(float timeDelta)
 			g_sphere[i].ballUpdate(timeDelta);
 			g_legowall[i].hitBy(g_sphere[3]);
 			if (i < 2) {
-				g_rod[i].hitBy(g_sphere[3]);
+				g_rod[i].hitRodBy(g_sphere[3]);
 			}				
 		}
 		// 하얀 공에 중력 적용
-		g_sphere[3].setPower(g_sphere[3].getVelocity_X() + timeDelta * (-6.8), g_sphere[3].getVelocity_Z());
+		g_sphere[3].setPower(g_sphere[3].getVelocity_X() + timeDelta * (-9.8), g_sphere[3].getVelocity_Z());
 
 		// check whether any two balls hit together and update the direction of balls
 		// 하얀 공이 충돌하는 지 확인
-		for (i = 0; i < 3; i++) { 
+		for (i = 0; i < NUM_OF_SPHERE; i++) { 
+			if (i == 3) continue;
 			g_sphere[3].hitBy(g_sphere[i]);
 		}
 
@@ -765,7 +768,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			break;
 		}
 
-		case VK_SPACE:
+		/*case VK_SPACE:
 			D3DXVECTOR3 targetPos = g_target_blueball.getCenter();
 			D3DXVECTOR3	whitePos = g_sphere[3].getCenter();
 			double theta = acos(sqrt(pow(targetPos.x - whitePos.x, 2)) / sqrt(pow(targetPos.x - whitePos.x, 2) +
@@ -775,12 +778,12 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			if (targetPos.z - whitePos.z <= 0 && targetPos.x - whitePos.x <= 0) { theta = PI + theta; } // 3 사분면
 			double distance = sqrt(pow(targetPos.x - whitePos.x, 2) + pow(targetPos.z - whitePos.z, 2));
 			g_sphere[3].setPower(distance * cos(theta), distance * sin(theta));
-			break;
+			break;*/
 		}
 		break;
 	}
 
-	case WM_MOUSEMOVE:
+	/*case WM_MOUSEMOVE:
 	{
 		int new_x = LOWORD(lParam);
 		int new_y = HIWORD(lParam);
@@ -816,23 +819,23 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			old_y = new_y;
 
 		}
-		else*/ {
-			isReset = true;
+		else*/ //{
+			/*isReset = true;
 
-			if (LOWORD(wParam) & MK_RBUTTON) {
-				dx = (old_x - new_x);// * 0.01f;
-				dy = (old_y - new_y);// * 0.01f;
+		if (LOWORD(wParam) & MK_RBUTTON) {
+			dx = (old_x - new_x);// * 0.01f;
+			dy = (old_y - new_y);// * 0.01f;
 
-				D3DXVECTOR3 coord3d = g_target_blueball.getCenter();
-				g_target_blueball.setCenter(coord3d.x + dx*(-0.007f), coord3d.y, coord3d.z + dy*0.007f);
-			}
-			old_x = new_x;
-			old_y = new_y;
-
-			move = WORLD_MOVE;
+			D3DXVECTOR3 coord3d = g_target_blueball.getCenter();
+			g_target_blueball.setCenter(coord3d.x + dx*(-0.007f), coord3d.y, coord3d.z + dy*0.007f);
 		}
-		break;
-	}
+		old_x = new_x;
+		old_y = new_y;
+
+		move = WORLD_MOVE;
+		//}*/
+		//break;
+		//}
 	}
 
 	return ::DefWindowProc(hwnd, msg, wParam, lParam);
