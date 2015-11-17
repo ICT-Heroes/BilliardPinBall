@@ -26,12 +26,12 @@ const int Width = 1024;
 const int Height = 768;
 int score = 0;
 int interSectedCount = 0;
-const int NUM_OF_SPHERE = 10;
+const int NUM_OF_SPHERE = 8;
 // There are four balls
 // initialize the position (coordinate) of each ball (ball0 ~ ball3)
-const float spherePos[NUM_OF_SPHERE][2] = { {-0.7f,-2.3f} , {-0.7f,-0.0f} , {-0.7f,2.3f} , {-0.8f,-0.9f}, {1.2f, 2.3f}, {1.2f, 0.0f},  {1.2f, -2.3f}, {3.2f, 2.3f }, {3.2f, 0.0f}, {3.2f, -2.3f} };
+const float spherePos[NUM_OF_SPHERE][2] = { {-0.7f,-0.0f}  , {1.2f, 2.3f}, {1.2f, 0.0f},{ -0.8f,-0.9f },{1.2f, -2.3f}, {3.2f, 2.3f }, {3.2f, 0.0f}, {3.2f, -2.3f} };
 // initialize the color of each ball (ball0 ~ ball3)
-const D3DXCOLOR sphereColor[NUM_OF_SPHERE] = { d3d::MAGENTA, d3d::MAGENTA, d3d::MAGENTA, d3d::WHITE, d3d::YELLOW, d3d::YELLOW, d3d::YELLOW, d3d::BLUE,d3d::BLUE,d3d::BLUE };
+const D3DXCOLOR sphereColor[NUM_OF_SPHERE] = { d3d::MAGENTA,  d3d::YELLOW, d3d::YELLOW, d3d::WHITE, d3d::YELLOW, d3d::BLUE,d3d::BLUE,d3d::BLUE };
 
 // -----------------------------------------------------------------------------
 // Transform matrices
@@ -99,8 +99,8 @@ public:
 			return;
 		pDevice->SetTransform(D3DTS_WORLD, &mWorld);
 		pDevice->MultiplyTransform(D3DTS_WORLD, &m_mLocal);
-		pDevice->SetMaterial(&m_mtrl);
-		m_pSphereMesh->DrawSubset(0);
+pDevice->SetMaterial(&m_mtrl);
+m_pSphereMesh->DrawSubset(0);
 	}
 
 	bool hasIntersected(CSphere& ball)
@@ -126,7 +126,7 @@ public:
 	void hitBy(CSphere& ball)
 	{
 		if (hasIntersected(ball)) {
-			score+=10;
+			score += 10;
 			D3DXVECTOR3 ballCenter = ball.getCenter();
 
 			float collisionX = normalizeX(this->center_x - ballCenter.x, this->center_z - ballCenter.z);
@@ -148,7 +148,7 @@ public:
 			//float v2z = ball.getVelocity_Z() - transVAz + transVBz;
 
 			setCenter(this->center_x + 0.01 * collisionX, this->center_y, this->center_z + 0.01 * collisionZ);
-			setPower(3*v1x, 3*v1z);
+			setPower(3 * v1x, 3 * v1z);
 			//ball.setPower(v2x, v2z);
 		}
 	}
@@ -198,7 +198,7 @@ public:
 		{
 			this->center_x = 4.56f - this->getRadius();
 		}
-		if (this->center_x - this->getRadius() < -4.56f)
+		if ((this->center_x + this->getRadius() < -4.56f) && (this->center_z > 0.2f) && (this->center_z < -0.2f))
 		{
 			this->center_x = -4.56f + this->getRadius();
 		}
@@ -324,12 +324,6 @@ public:
 			if (4.5 - ball.getRadius() < pos.x) {
 				return true;
 			}
-		}
-		else if (this->m_x > -3.1f && this->m_x < -2.9f){ 
-			if (1.5 - ball.getRadius() < pos.x) {
-				return true;
-			}
-			
 		}
 		else {
 			if (0 < this->m_z) {
@@ -533,7 +527,7 @@ private:
 // Global variables
 // -----------------------------------------------------------------------------
 CWall	g_legoPlane;
-CWall	g_legowall[4];
+CWall	g_legowall[5];
 CWall   g_rod[2];
 CSphere	g_sphere[NUM_OF_SPHERE];
 //CSphere	g_target_blueball;
@@ -572,9 +566,10 @@ bool Setup()
 	g_legowall[1].setPosition(0.0f, 0.12f, -3.06f);
 	if (false == g_legowall[2].create(Device, -1, -1, 0.12f, 0.3f, 6.24f, d3d::DARKRED)) return false;
 	g_legowall[2].setPosition(4.56f, 0.12f, 0.0f);
-	if (false == g_legowall[3].create(Device, -1, -1, 0.12f, 0.3f, 6.24f, d3d::DARKRED)) return false;
-	g_legowall[3].setPosition(-4.56f, 0.12f, 0.0f);
-
+	if (false == g_legowall[3].create(Device, -1, -1, 0.12f, 0.3f, 2.8f, d3d::DARKRED)) return false;
+	g_legowall[3].setPosition(-4.56f, 0.12f, -1.8f);
+	if (false == g_legowall[4].create(Device, -1, -1, 0.12f, 0.3f, 2.8f, d3d::DARKRED)) return false;
+	g_legowall[4].setPosition(-4.56f, 0.12f, 1.8f);
 	if (g_rod[0].create(Device, -1, -1, 0.12f, 0.3f, 3.0f, d3d::DARKRED) == false) {
 		return false;
 	}
@@ -639,7 +634,7 @@ bool Setup()
 void Cleanup(void)
 {
 	g_legoPlane.destroy();
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 5; i++) {
 		g_legowall[i].destroy();
 	}
 	destroyAllLegoBlock();
@@ -663,7 +658,7 @@ bool Display(float timeDelta)
 		// update the position of each ball. during update, check whether each ball hit by walls.
 		for (i = 0; i < NUM_OF_SPHERE; i++) {
 			g_sphere[i].ballUpdate(timeDelta);
-			if (i < 4) {
+			if (i < 5) {
 				g_legowall[i].hitBy(g_sphere[3]);
 			}
 			if (i < 2) {
@@ -682,7 +677,7 @@ bool Display(float timeDelta)
 
 		// draw plane, walls, and spheres
 		g_legoPlane.draw(Device, g_mWorld);
-		for (i = 0; i < 4; i++) {
+		for (i = 0; i < 5; i++) {
 			g_legowall[i].draw(Device, g_mWorld);
 		}
 		for (i = 0; i < NUM_OF_SPHERE; i++) {
