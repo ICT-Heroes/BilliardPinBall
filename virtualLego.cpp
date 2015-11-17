@@ -16,12 +16,15 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cassert>
+#include <iostream>
+
 
 IDirect3DDevice9* Device = NULL;
 
 // window size
 const int Width = 1024;
 const int Height = 768;
+int highScore = 0;
 // There are four balls
 // initialize the position (coordinate) of each ball (ball0 ~ ball3)
 const float spherePos[4][2] = { {-2.7f,0} , {+2.4f,0} , {3.3f,0} , {-2.7f,-0.9f} };
@@ -40,7 +43,7 @@ D3DXMATRIX g_mProj;
 #define M_HEIGHT 0.01
 #define DECREASE_RATE 0.9982
 
-
+class CWall;
 // -----------------------------------------------------------------------------
 // CSphere class definition
 // -----------------------------------------------------------------------------
@@ -250,6 +253,7 @@ public:
 	float getRotation() {
 		return rotation;
 	}
+
 	bool create(IDirect3DDevice9* pDevice, float ix, float iz, float iwidth, float iheight, float idepth, D3DXCOLOR color = d3d::WHITE)
 	{
 		if (NULL == pDevice)
@@ -318,6 +322,26 @@ public:
 		return false;
 	}
 
+	bool hasRodIntersected(CSphere& ball)
+	{
+		float rodRotation = this->getRotation();
+		if (rodRotation < 0) rodRotation *= (-1);
+
+		D3DXVECTOR3 ballCenter = ball.getCenter();
+
+		// rod z = ax + b
+		float a, b;
+		b = abs(m_x) / tan(rodRotation) - abs(m_z);
+		a = (b - m_z) / (0 - m_x);
+		double distance = (a*ballCenter.x - ballCenter.z + b) / sqrt(a*a + 1);
+		if (distance <= 4*ball.getRadius()*ball.getRadius()){
+			highScore++;
+			return true;
+		}
+		return false;
+	}
+
+
 	void hitBy(CSphere& ball) {
 		if (hasIntersected(ball)) {
 			D3DXVECTOR3 b = ball.getCenter();
@@ -342,6 +366,31 @@ public:
 				}
 			}
 			ball.setPower(velocityX, velocityZ);
+		}
+
+		if (hasRodIntersected(ball)){
+			
+			float rodRotation = this->getRotation();
+			if (rodRotation < 0) rodRotation *= (-1);
+
+			D3DXVECTOR3 rodLocate(this->m_x, 0.12f, this->m_z);
+
+			// rod z = ax + b
+			float a, b;
+			b = abs(m_x) / tan(rodRotation) - abs(m_z);
+			a = (b - m_z) / (0 - m_x);
+
+			// 원과 rod의 충돌점
+			float collidX, collidZ;
+			// sphere 진행방향 z = ax + b
+			float sphereA, sphereB;
+			sphereA = ball.getVelocity_Z() / ball.getVelocity_X();
+			sphereB = ball.getVelocity_Z();
+
+			collidX = (b - sphereB) / (sphereA - a);
+			collidZ = collidX * a + b;
+
+			ball.setPower(-collidX - collidZ*a, collidX / a + collidZ);
 		}
 	}
 
@@ -464,6 +513,7 @@ CWall   g_rod[2];
 CSphere	g_sphere[4];
 CSphere	g_target_blueball;
 CLight	g_light;
+LPD3DXFONT g_font;
 
 double g_camera_pos[3] = { 0.0, 5.0, -8.0 };
 
@@ -515,6 +565,8 @@ bool Setup()
 		g_sphere[i].setCenter(spherePos[i][0], (float)M_RADIUS, spherePos[i][1]);
 		g_sphere[i].setPower(0, 0);
 	}
+	// 시작 시 중력 적용
+	g_sphere[3].setPower(-3.0, 0);
 
 	// create blue ball for set direction
 	if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
@@ -536,8 +588,8 @@ bool Setup()
 		return false;
 
 	// Position and aim the camera.
-	D3DXVECTOR3 pos(0.0f, 10.0f, 0.0f);
-	D3DXVECTOR3 target(0.0f, 0.0f, 0.0f);
+	D3DXVECTOR3 pos(-5.0f, 7.5f, 0.0f);
+	D3DXVECTOR3 target(0.0f, -2.5f, 0.0f);
 	D3DXVECTOR3 up(1.0f, 0.0f, 0.0f);
 	D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
 	Device->SetTransform(D3DTS_VIEW, &g_mView);
@@ -553,6 +605,7 @@ bool Setup()
 	Device->SetRenderState(D3DRS_SHADEMODE, D3DSHADE_GOURAUD);
 
 	g_light.setLight(Device, g_mWorld);
+	D3DXCreateFont(Device, 20, 0, FW_BOLD, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &g_font);
 	return true;
 }
 
@@ -583,20 +636,17 @@ bool Display(float timeDelta)
 		// update the position of each ball. during update, check whether each ball hit by walls.
 		for (i = 0; i < 4; i++) {
 			g_sphere[i].ballUpdate(timeDelta);
-			for (j = 0; j < 4; j++) {
-				g_legowall[i].hitBy(g_sphere[j]);
-				if (i < 2) {
-					g_rod[i].hitBy(g_sphere[j]);
-				}				
-			}
+			g_legowall[i].hitBy(g_sphere[3]);
+			if (i < 2) {
+				g_rod[i].hitBy(g_sphere[3]);
+			}				
 		}
+		// 하얀 공에 중력 적용
+		g_sphere[3].setPower(g_sphere[3].getVelocity_X() + timeDelta * (-6.8), g_sphere[3].getVelocity_Z());
 
 		// check whether any two balls hit together and update the direction of balls
-		for (i = 0; i < 3; i++) { // 4; i++) {
-			/*for (j = 0; j < 4; j++) {
-				if (i >= j) { continue; }
-				g_sphere[i].hitBy(g_sphere[j]);
-			}*/
+		// 하얀 공이 충돌하는 지 확인
+		for (i = 0; i < 3; i++) { 
 			g_sphere[3].hitBy(g_sphere[i]);
 		}
 
@@ -610,13 +660,31 @@ bool Display(float timeDelta)
 		for (i = 0; i < 2; i++) {
 			g_rod[i].draw(Device, g_mWorld);
 		}
+
 		g_target_blueball.draw(Device, g_mWorld);
 		g_light.draw(Device);
 
+
+		// Create a colour for the text - in this case blue
+		D3DCOLOR fontColor = D3DCOLOR_ARGB(255, 0, 0, 255);
+
+		// Create a rectangle to indicate where on the screen it should be drawn
+		RECT rct;
+		rct.left = 2;
+		rct.right = 780;
+		rct.top = 10;
+		rct.bottom = rct.top + 20;
+
+		// Draw some text 
+		char buffer[20];
+		_itoa_s(highScore, buffer, 20, 10);
+		g_font->DrawText(NULL, buffer, -1, &rct, 0, fontColor);
 		Device->EndScene();
 		Device->Present(0, 0, 0, 0);
 		Device->SetTexture(0, NULL);
+
 	}
+
 	return true;
 }
 
@@ -703,7 +771,8 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		float dx;
 		float dy;
 
-		if (LOWORD(wParam) & MK_LBUTTON) {
+		// 핀볼 보드 고정
+		/*if (LOWORD(wParam) & MK_LBUTTON) {
 
 			if (isReset) {
 				isReset = false;
@@ -731,7 +800,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			old_y = new_y;
 
 		}
-		else {
+		else*/ {
 			isReset = true;
 
 			if (LOWORD(wParam) & MK_RBUTTON) {
@@ -781,9 +850,3 @@ int WINAPI WinMain(HINSTANCE hinstance,
 
 	return 0;
 }
-
-class ScoreSystem {
-private:
-	static int score;
-	static int highScore;
-};
