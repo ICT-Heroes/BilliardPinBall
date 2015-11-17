@@ -371,8 +371,8 @@ public:
 			ball.setPower(velocityX, velocityZ);
 		}
 
-		if (hasRodIntersected(ball)){
-			
+		if (hasRodIntersected(ball)) {
+
 			float rodRotation = this->getRotation();
 			if (rodRotation < 0) rodRotation *= (-1);
 
@@ -570,7 +570,7 @@ bool Setup()
 		g_sphere[i].setPower(0, 0);
 	}
 	// 시작 시 중력 적용
-	g_sphere[3].setPower(-5.0, 0);
+	g_sphere[3].setPower(-3.0, 0);
 
 	// create blue ball for set direction
 	if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
@@ -641,18 +641,22 @@ bool Display(float timeDelta)
 		// update the position of each ball. during update, check whether each ball hit by walls.
 		for (i = 0; i < NUM_OF_SPHERE; i++) {
 			g_sphere[i].ballUpdate(timeDelta);
-			g_legowall[i].hitBy(g_sphere[3]);
+			if (i < 4) {
+				g_legowall[i].hitBy(g_sphere[3]);
+			}
 			if (i < 2) {
 				g_rod[i].hitBy(g_sphere[3]);
 			}				
 		}
 		// 하얀 공에 중력 적용
-		g_sphere[3].setPower(g_sphere[3].getVelocity_X() + timeDelta * (-6.8), g_sphere[3].getVelocity_Z());
+		g_sphere[3].setPower(g_sphere[3].getVelocity_X() + timeDelta * (-9.8), g_sphere[3].getVelocity_Z());
 
 		// check whether any two balls hit together and update the direction of balls
 		// 하얀 공이 충돌하는 지 확인
-		for (i = 0; i < 3; i++) { 
-			g_sphere[3].hitBy(g_sphere[i]);
+		for (i = 0; i < NUM_OF_SPHERE; i++) {
+			if (i != 3) {
+				g_sphere[3].hitBy(g_sphere[i]);
+			}
 		}
 
 		// draw plane, walls, and spheres
