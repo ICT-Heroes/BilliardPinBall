@@ -784,6 +784,13 @@ int WINAPI WinMain(HINSTANCE hinstance,
 
 class ScoreSystem {
 private:
-	static int score;
+	int score;
+public:
 	static int highScore;
+	int getScore() {
+		return score;
+	}
+	void plusScore() {
+		score++;
+	}
 };
