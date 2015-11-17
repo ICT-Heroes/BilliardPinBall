@@ -198,10 +198,10 @@ public:
 		{
 			this->center_x = 4.56f - this->getRadius();
 		}
-		if (this->center_x - this->getRadius() < -4.56f)
-		{
-			this->center_x = -4.56f + this->getRadius();
-		}
+		//if (this->center_x - this->getRadius() < -4.56f)
+		//{
+		//	this->center_x = -4.56f + this->getRadius();
+		//}
 	}
 
 	double getVelocity_X() { return this->m_velocity_x; }
@@ -573,8 +573,8 @@ bool Setup()
 	g_legowall[1].setPosition(0.0f, 0.12f, -3.06f);
 	if (false == g_legowall[2].create(Device, -1, -1, 0.12f, 0.3f, 6.24f, d3d::DARKRED)) return false;
 	g_legowall[2].setPosition(4.56f, 0.12f, 0.0f);
-	if (false == g_legowall[3].create(Device, -1, -1, 0.12f, 0.3f, 6.24f, d3d::DARKRED)) return false;
-	g_legowall[3].setPosition(-4.56f, 0.12f, 0.0f);
+	//if (false == g_legowall[3].create(Device, -1, -1, 0.12f, 0.3f, 6.24f, d3d::DARKRED)) return false;
+	//g_legowall[3].setPosition(-4.56f, 0.12f, 0.0f);
 
 	if (g_rod[0].create(Device, -1, -1, 0.12f, 0.3f, 3.0f, d3d::DARKRED) == false) {
 		return false;
@@ -640,7 +640,7 @@ bool Setup()
 void Cleanup(void)
 {
 	g_legoPlane.destroy();
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 3; i++) {
 		g_legowall[i].destroy();
 	}
 	destroyAllLegoBlock();
@@ -664,7 +664,7 @@ bool Display(float timeDelta)
 		// update the position of each ball. during update, check whether each ball hit by walls.
 		for (i = 0; i < NUM_OF_SPHERE; i++) {
 			g_sphere[i].ballUpdate(timeDelta);
-			g_legowall[i].hitBy(g_sphere[3]);
+			if(i < 3) g_legowall[i].hitBy(g_sphere[3]);
 		}
 		// 하얀 공에 중력 적용
 		g_sphere[3].setPower(g_sphere[3].getVelocity_X() + timeDelta * (-9.8), g_sphere[3].getVelocity_Z());
@@ -679,7 +679,7 @@ bool Display(float timeDelta)
 
 		// draw plane, walls, and spheres
 		g_legoPlane.draw(Device, g_mWorld);
-		for (i = 0; i < 4; i++) {
+		for (i = 0; i < 3; i++) {
 			g_legowall[i].draw(Device, g_mWorld);
 		}
 		for (i = 0; i < NUM_OF_SPHERE; i++) {
