@@ -184,6 +184,24 @@ public:
 		if (rate < 0)
 			rate = 0;
 		this->setPower(getVelocity_X() * rate, getVelocity_Z() * rate);
+
+		// 공이 보드 밖으로 벗어나지 못하게 제한
+		if (this->center_z + this->getRadius() > 3.06f)
+		{
+			this->center_z = 3.06f - this->getRadius();
+		}
+		if (this->center_z - this->getRadius() < -3.06f)
+		{
+			this->center_z = -3.06f + this->getRadius();
+		}
+		if (this->center_x + this->getRadius() > 4.56f)
+		{
+			this->center_x = 4.56f - this->getRadius();
+		}
+		if (this->center_x - this->getRadius() < -4.56f)
+		{
+			this->center_x = -4.56f + this->getRadius();
+		}
 	}
 
 	double getVelocity_X() { return this->m_velocity_x; }
@@ -193,6 +211,9 @@ public:
 	{
 		this->m_velocity_x = vx;
 		this->m_velocity_z = vz;
+		// 최대 속도 제한
+		if (vx > 5) this->m_velocity_x = 5;
+		if (vz > 5) this->m_velocity_z = 5;
 	}
 
 	void setCenter(float x, float y, float z)
@@ -571,7 +592,7 @@ bool Setup()
 		g_sphere[i].setCenter(spherePos[i][0], (float)M_RADIUS, spherePos[i][1]);
 		g_sphere[i].setPower(0, 0);
 	}
-	// 시작 시 중력 적용
+	// 시작 시 하얀 공에 중력 적용
 	g_sphere[3].setPower(-1.0, 0);
 
 	// create blue ball for set direction
@@ -645,7 +666,7 @@ bool Display(float timeDelta)
 			g_sphere[i].ballUpdate(timeDelta);
 			g_legowall[i].hitBy(g_sphere[3]);
 			if (i < 2) {
-				g_rod[i].hitRodBy(g_sphere[3]);
+				//g_rod[i].hitRodBy(g_sphere[3]);
 			}				
 		}
 		// 하얀 공에 중력 적용
@@ -757,6 +778,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			//막대 오른쪽이 움직인다.
 			if (g_rod[0].getRotation() == -0.5f) {
 				g_rod[0].rotate(0.0f, 0.12f, 1.3f, 1.0f);
+				g_rod[0].hitRodBy(g_sphere[3]);
 			}			
 			break;
 		}
@@ -764,6 +786,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			//막대 왼쪽이 움직인다.
 			if (g_rod[1].getRotation() == 0.5f) {
 				g_rod[1].rotate(0.0f, 0.12f, -1.3f, -1.0f);
+				g_rod[1].hitRodBy(g_sphere[3]);
 			}
 			break;
 		}
