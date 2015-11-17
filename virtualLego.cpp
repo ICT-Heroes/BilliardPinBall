@@ -627,7 +627,7 @@ bool Setup()
 	Device->SetRenderState(D3DRS_SHADEMODE, D3DSHADE_GOURAUD);
 
 	g_light.setLight(Device, g_mWorld);
-	D3DXCreateFont(Device, 25, 0, FW_BOLD, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &g_font);
+	D3DXCreateFont(Device, 60, 0, FW_BOLD, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &g_font);
 	D3DXCreateFont(Device, 20, 0, FW_BOLD, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &g_debug);
 	return true;
 }
@@ -697,16 +697,10 @@ bool Display(float timeDelta)
 
 		// Create a rectangle to indicate where on the screen it should be drawn
 		RECT scoreRect;
-		scoreRect.left = 10;
+		scoreRect.left = 50;
 		scoreRect.right = 780;
-		scoreRect.top = 10;
-		scoreRect.bottom = scoreRect.top + 20;
-		
-		RECT debugRect;
-		debugRect.left = 10;
-		debugRect.right = 780;
-		debugRect.top = 50;
-		debugRect.bottom = debugRect.top + 20;
+		scoreRect.top = 50;
+		scoreRect.bottom = scoreRect.top + 80;
 
 
 		// Draw some text
@@ -715,7 +709,6 @@ bool Display(float timeDelta)
 		_itoa_s(score, scoreBuffer, 20, 10);
 		_itoa_s(interSectedCount, debugBuffer, 20, 10);
 		g_font->DrawText(NULL, scoreBuffer, -1, &scoreRect, 0, fontColor);
-		g_debug->DrawTextA(NULL, debugBuffer, -1, &debugRect, 0, fontColor);
 		Device->EndScene();
 		Device->Present(0, 0, 0, 0);
 		Device->SetTexture(0, NULL);
