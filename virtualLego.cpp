@@ -594,8 +594,6 @@ bool Setup()
 	g_legowall[1].setPosition(0.0f, 0.12f, -3.06f);
 	if (false == g_legowall[2].create(Device, -1, -1, 0.12f, 0.3f, 6.24f, d3d::DARKRED)) return false;
 	g_legowall[2].setPosition(4.56f, 0.12f, 0.0f);
-	//if (false == g_legowall[3].create(Device, -1, -1, 0.12f, 0.3f, 6.24f, d3d::DARKRED)) return false;
-	//g_legowall[3].setPosition(-4.56f, 0.12f, 0.0f);
 
 	if (g_rod[0].create(Device, -1, -1, 0.12f, 0.3f, 3.0f, d3d::DARKRED) == false) {
 		return false;
@@ -607,6 +605,7 @@ bool Setup()
 	}
 	g_rod[1].setPosition(-3.0f, 0.12f, 1.5f);
 	g_rod[1].rotate(0.0f, 0.12f, -1.5f, 0.5f);
+
 	// create four balls and set the position
 	for (i = 0; i < NUM_OF_SPHERE; i++) {
 		if (g_sphere[i].create(Device, sphereColor[i]) == false) return false;
@@ -614,11 +613,7 @@ bool Setup()
 		g_sphere[i].setPower(0, 0);
 	}
 	// 시작 시 하얀 공에 중력 적용
-	g_sphere[3].setPower(-1.0, 0);
-
-	// create blue ball for set direction
-	//if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
-	//g_target_blueball.setCenter(.0f, (float)M_RADIUS, .0f);
+	g_sphere[3].setPower(-1.5, 0);
 
 	// light setting 
 	D3DLIGHT9 lit;
@@ -707,7 +702,6 @@ bool Display(float timeDelta)
 			if (i == 3) continue;
 			g_sphere[3].hitBy(g_sphere[i]);
 		}
-
 
 		// draw plane, walls, and spheres
 		g_legoPlane.draw(Device, g_mWorld);
@@ -871,59 +865,6 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 
-	/*case WM_MOUSEMOVE:
-	{
-		int new_x = LOWORD(lParam);
-		int new_y = HIWORD(lParam);
-		float dx;
-		float dy;
-
-		// 핀볼 보드 고정
-		/*if (LOWORD(wParam) & MK_LBUTTON) {
-
-			if (isReset) {
-				isReset = false;
-			}
-			else {
-				D3DXVECTOR3 vDist;
-				D3DXVECTOR3 vTrans;
-				D3DXMATRIX mTrans;
-				D3DXMATRIX mX;
-				D3DXMATRIX mY;
-
-				switch (move) {
-				case WORLD_MOVE:
-					dx = (old_x - new_x) * 0.01f;
-					dy = (old_y - new_y) * 0.01f;
-					D3DXMatrixRotationY(&mX, dx);
-					D3DXMatrixRotationX(&mY, dy);
-					g_mWorld = g_mWorld * mX * mY;
-
-					break;
-				}
-			}
-
-			old_x = new_x;
-			old_y = new_y;
-
-		}
-		else*/ //{
-			/*isReset = true;
-
-		if (LOWORD(wParam) & MK_RBUTTON) {
-			dx = (old_x - new_x);// * 0.01f;
-			dy = (old_y - new_y);// * 0.01f;
-
-			D3DXVECTOR3 coord3d = g_target_blueball.getCenter();
-			g_target_blueball.setCenter(coord3d.x + dx*(-0.007f), coord3d.y, coord3d.z + dy*0.007f);
-		}
-		old_x = new_x;
-		old_y = new_y;
-
-		move = WORLD_MOVE;
-		//}*/
-		//break;
-		//}
 	}
 
 	return ::DefWindowProc(hwnd, msg, wParam, lParam);
