@@ -26,11 +26,12 @@ const int Width = 1024;
 const int Height = 768;
 int score = 0;
 int interSectedCount = 0;
+const int NUM_OF_SPHERE = 10;
 // There are four balls
 // initialize the position (coordinate) of each ball (ball0 ~ ball3)
-const float spherePos[4][2] = { {-2.7f,0} , {+2.4f,0} , {3.3f,0} , {-2.7f,-0.9f} };
+const float spherePos[NUM_OF_SPHERE][2] = { {-0.7f,-2.3f} , {-0.7f,-0.0f} , {-0.7f,2.3f} , {-0.8f,-0.9f}, {1.2f, 2.3f}, {1.2f, 0.0f},  {1.2f, -2.3f}, {3.2f, 2.3f }, {3.2f, 0.0f}, {3.2f, -2.3f} };
 // initialize the color of each ball (ball0 ~ ball3)
-const D3DXCOLOR sphereColor[4] = { d3d::RED, d3d::RED, d3d::YELLOW, d3d::WHITE };
+const D3DXCOLOR sphereColor[NUM_OF_SPHERE] = { d3d::MAGENTA, d3d::MAGENTA, d3d::MAGENTA, d3d::WHITE, d3d::YELLOW, d3d::YELLOW, d3d::YELLOW, d3d::BLUE,d3d::BLUE,d3d::BLUE };
 
 // -----------------------------------------------------------------------------
 // Transform matrices
@@ -512,7 +513,7 @@ private:
 CWall	g_legoPlane;
 CWall	g_legowall[4];
 CWall   g_rod[2];
-CSphere	g_sphere[4];
+CSphere	g_sphere[NUM_OF_SPHERE];
 CSphere	g_target_blueball;
 CLight	g_light;
 LPD3DXFONT g_font;
@@ -563,13 +564,13 @@ bool Setup()
 	g_rod[1].setPosition(-3.0f, 0.12f, 1.5f);
 	g_rod[1].rotate(0.0f, 0.12f, -1.5f, 0.5f);
 	// create four balls and set the position
-	for (i = 0; i < 4; i++) {
+	for (i = 0; i < NUM_OF_SPHERE; i++) {
 		if (g_sphere[i].create(Device, sphereColor[i]) == false) return false;
 		g_sphere[i].setCenter(spherePos[i][0], (float)M_RADIUS, spherePos[i][1]);
 		g_sphere[i].setPower(0, 0);
 	}
 	// 시작 시 중력 적용
-	g_sphere[3].setPower(-3.0, 0);
+	g_sphere[3].setPower(-5.0, 0);
 
 	// create blue ball for set direction
 	if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
@@ -638,7 +639,7 @@ bool Display(float timeDelta)
 		Device->BeginScene();
 
 		// update the position of each ball. during update, check whether each ball hit by walls.
-		for (i = 0; i < 4; i++) {
+		for (i = 0; i < NUM_OF_SPHERE; i++) {
 			g_sphere[i].ballUpdate(timeDelta);
 			g_legowall[i].hitBy(g_sphere[3]);
 			if (i < 2) {
@@ -658,6 +659,8 @@ bool Display(float timeDelta)
 		g_legoPlane.draw(Device, g_mWorld);
 		for (i = 0; i < 4; i++) {
 			g_legowall[i].draw(Device, g_mWorld);
+		}
+		for (i = 0; i < NUM_OF_SPHERE; i++) {
 			g_sphere[i].draw(Device, g_mWorld);
 		}
 
@@ -665,7 +668,6 @@ bool Display(float timeDelta)
 			g_rod[i].draw(Device, g_mWorld);
 		}
 
-		g_target_blueball.draw(Device, g_mWorld);
 		g_light.draw(Device);
 
 
